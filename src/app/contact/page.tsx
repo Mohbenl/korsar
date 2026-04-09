@@ -4,6 +4,7 @@ import { useState } from "react";
 import { DM_Sans } from "next/font/google";
 import { Instagram, Facebook, Mail, Phone, MapPin } from "lucide-react";
 import Footer from "@/components/footer";
+import Navbar from "@/components/Navbar";
 
 const dmSans = DM_Sans({
     subsets: ["latin"],
@@ -56,7 +57,7 @@ export default function ContactPage() {
 
     return (
         <div className={`${dmSans.className} bg-[#F5F3EE] min-h-screen`}>
-
+            <Navbar />
             {/* Header */}
             <div className="bg-[#0B1C2D] pt-40 pb-24 px-6">
                 <div className="max-w-7xl mx-auto">

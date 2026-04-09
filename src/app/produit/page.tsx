@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { DM_Sans } from "next/font/google";
 import ProductCard from "@/components/Card";
+import Navbar from "@/components/Navbar";
 
 const dmSans = DM_Sans({
     subsets: ["latin"],
@@ -84,7 +85,7 @@ export default function ProduitPage() {
 
     return (
         <div className={`${dmSans.className} bg-[#F5F3EE] min-h-screen`}>
-
+            <Navbar />
             {/* Header */}
             <div className="max-w-7xl mx-auto px-6 pt-32 pb-8">
                 <p className="text-[#C6A75E] text-xs tracking-widest uppercase mb-3">

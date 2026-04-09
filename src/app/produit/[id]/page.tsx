@@ -10,6 +10,7 @@ import Footer from "@/components/footer";
 import { useCart } from "@/contexts/CartContext";
 import {router} from "next/client";
 import { useRouter } from "next/navigation";
+import Navbar from "@/components/Navbar";
 
 const dmSans = DM_Sans({
     subsets: ["latin"],
@@ -102,7 +103,7 @@ export default function ProductDetailPage() {
     };
     return (
         <div className={`${dmSans.className} bg-[#F5F3EE] min-h-screen`}>
-
+            <Navbar />
             {/* Breadcrumb */}
             <div className="max-w-7xl mx-auto px-6 pt-32 pb-6">
                 <Link

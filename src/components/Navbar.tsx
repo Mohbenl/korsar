@@ -24,6 +24,7 @@ export default function Navbar() {
 
     useLayoutEffect(() => {
         if (!isHomePage) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setScrolled(true);
             return () => setScrolled(false);
         }
@@ -105,7 +106,9 @@ export default function Navbar() {
                                 </span>
                             )}
                         </Link>
-                        <User className="cursor-pointer hover:text-[#C6A75E] transition" size={22} />
+                        <Link href="/admin">
+                            <User className="cursor-pointer hover:text-[#C6A75E] transition" size={22}/>
+                        </Link>
                     </div>
 
                     {/* Mobile button */}
