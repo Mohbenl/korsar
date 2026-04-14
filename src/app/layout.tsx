@@ -15,8 +15,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-    title: "Korsar - Boutique Premium",
+    title: "Korsar",
     description: "Plateforme e-commerce Korsar",
+    icons: {
+        icon: "/KORSAR.png",
+    },
 };
 
 export default function RootLayout({

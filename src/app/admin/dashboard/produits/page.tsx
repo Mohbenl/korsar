@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAdmin } from "@/contexts/AdminContext";
+import { Search } from "lucide-react";
 import { DM_Sans } from "next/font/google";
 import Link from "next/link";
 import { LogOut, Plus, Edit2, Trash2, ArrowLeft, Star } from "lucide-react";
@@ -40,12 +41,36 @@ const AdminProduitsPage = () => {
         sizes: ["S", "M", "L", "XL"],
     });
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
+    const [selectedCategory, setSelectedCategory] = useState("Tous");
+    const [sortOrder, setSortOrder] = useState("default");
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const productsPerPage = 5;
+
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (!isAuthenticated) {
             router.push("/admin");
         }
     }, [isAuthenticated, router]);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+        }, 400);
+
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setLoading(true);
+        const t = setTimeout(() => setLoading(false), 500);
+        return () => clearTimeout(t);
+    }, [debouncedSearch, selectedCategory, sortOrder]);
 
     useEffect(() => {
         try {
@@ -141,6 +166,29 @@ const AdminProduitsPage = () => {
     if (!isAuthenticated) {
         return null;
     }
+
+    const filteredProducts = products
+        .filter((product) => {
+            const matchesSearch = product.name
+                .toLowerCase()
+                .includes(debouncedSearch.toLowerCase());
+
+            const matchesCategory =
+                selectedCategory === "Tous" ||
+                product.category === selectedCategory;
+
+            return matchesSearch && matchesCategory;
+        })
+        .sort((a, b) => {
+            if (sortOrder === "asc") return a.price - b.price;
+            if (sortOrder === "desc") return b.price - a.price;
+            return 0;
+        });
+
+    const indexOfLast = currentPage * productsPerPage;
+    const indexOfFirst = indexOfLast - productsPerPage;
+    const currentProducts = filteredProducts.slice(indexOfFirst, indexOfLast);
+    const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
 
     return (
         <div className={`${dmSans.className} bg-[#F5F3EE] min-h-screen`}>
@@ -294,9 +342,70 @@ const AdminProduitsPage = () => {
                         </button>
                     </div>
                 )}
+                {/* Search & Filters */}
+                <div className="bg-white border border-[#0B1C2D]/10 p-6 mb-8 space-y-6">
 
+                    {/* SEARCH */}
+                    <div className="relative w-full md:w-1/3">
+                        <Search
+                            size={18}
+                            className="absolute left-4 top-1/2 -translate-y-1/2 text-[#0B1C2D]/40"
+                        />
+                        <input
+                            type="text"
+                            placeholder="Rechercher un produit..."
+                            value={searchTerm}
+                            onChange={(e) => {
+                                setSearchTerm(e.target.value);
+                                setCurrentPage(1);
+                            }}
+                            className="w-full pl-12 pr-4 py-3 border border-[#0B1C2D]/10 focus:border-[#C6A75E] outline-none text-[#0B1C2D] transition-all duration-300"
+                        />
+                    </div>
+
+                    {/* CATEGORY (PILLS) */}
+                    <div className="flex flex-wrap gap-2">
+                        {["Tous","Vestes","Overshirts","Sweats","Pantalons","T-Shirts","Accessoires"].map((cat) => (
+                            <button
+                                key={cat}
+                                onClick={() => {
+                                    setSelectedCategory(cat);
+                                    setCurrentPage(1);
+                                }}
+                                className={`px-4 py-2 text-xs tracking-widest uppercase border transition-all duration-300 ${
+                                    selectedCategory === cat
+                                        ? "bg-[#0B1C2D] text-white border-[#0B1C2D]"
+                                        : "border-[#0B1C2D]/20 text-[#0B1C2D] hover:border-[#C6A75E] hover:text-[#C6A75E]"
+                                }`}
+                            >
+                                {cat}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* SORT (TOGGLE STYLE) */}
+                    <div className="flex gap-2">
+                        {[
+                            { label: "Défaut", value: "default" },
+                            { label: "Prix ↑", value: "asc" },
+                            { label: "Prix ↓", value: "desc" },
+                        ].map((s) => (
+                            <button
+                                key={s.value}
+                                onClick={() => setSortOrder(s.value)}
+                                className={`px-4 py-2 text-xs tracking-widest uppercase border transition-all duration-300 ${
+                                    sortOrder === s.value
+                                        ? "bg-[#C6A75E] text-white border-[#C6A75E]"
+                                        : "border-[#0B1C2D]/20 text-[#0B1C2D] hover:border-[#C6A75E] hover:text-[#C6A75E]"
+                                }`}
+                            >
+                                {s.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
                 {/* Products Table */}
-                {products.length === 0 ? (
+                {filteredProducts.length === 0 ? (
                     <div className="bg-white border border-[#0B1C2D]/10 p-12 text-center">
                         <p className="text-gray-400 font-light">
                             Aucun produit pour le moment
@@ -306,7 +415,7 @@ const AdminProduitsPage = () => {
                     <div className="bg-white border border-[#0B1C2D]/10 overflow-x-auto">
                         <table className="w-full">
                             <thead className="border-b border-[#0B1C2D]/10 bg-[#F5F3EE]">
-                            <tr>
+                            <tr className="border-b border-[#0B1C2D]/10 hover:bg-[#F5F3EE] transition-all duration-300 opacity-0 animate-[fadeIn_0.4s_forwards]">
                                 <th className="px-6 py-4 text-left text-xs tracking-widest uppercase text-[#C6A75E] font-light">
                                     Nom
                                 </th>
@@ -334,10 +443,10 @@ const AdminProduitsPage = () => {
                             </tr>
                             </thead>
                             <tbody>
-                            {products.map((product, index) => (
+                            {currentProducts.map((product, index) => (
                                 <tr
                                     key={product.id}
-                                    className={`border-b border-[#0B1C2D]/10 hover:bg-[#F5F3EE] transition-all duration-300 ${
+                                    className={`border-b border-[#0B1C2D]/10 hover:bg-[#F5F3EE] transition-all duration-300 opacity-0 animate-[fadeIn_0.4s_forwards] ${
                                         index === products.length - 1 ? "border-b-0" : ""
                                     }`}
                                 >
@@ -408,6 +517,22 @@ const AdminProduitsPage = () => {
                         </table>
                     </div>
                 )}
+
+                <div className="flex justify-center items-center gap-2 mt-6 flex-wrap">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                        <button
+                            key={page}
+                            onClick={() => setCurrentPage(page)}
+                            className={`px-4 py-2 text-sm border transition-all ${
+                                currentPage === page
+                                    ? "bg-[#0B1C2D] text-white"
+                                    : "border-[#0B1C2D]/20 text-[#0B1C2D] hover:border-[#C6A75E] hover:text-[#C6A75E]"
+                            }`}
+                        >
+                            {page}
+                        </button>
+                    ))}
+                </div>
             </main>
         </div>
     );

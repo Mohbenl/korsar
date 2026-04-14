@@ -188,6 +188,48 @@ const AdminDashboard = () => {
                     </div>
                 </div>
 
+                {/* Analytics Section */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+
+                    {/* Revenue Chart */}
+                    <div className="lg:col-span-2 bg-white border border-[#0B1C2D]/10 p-6 hover:border-[#C6A75E]/30 transition-all duration-300">
+                        <p className="text-xs tracking-widest uppercase text-[#C6A75E] mb-4">
+                            Revenus (7 derniers jours)
+                        </p>
+
+                        {/* Fake Chart */}
+                        <div className="flex items-end gap-2 h-40">
+                            {[40, 60, 30, 80, 55, 70, 90].map((h, i) => (
+                                <div
+                                    key={i}
+                                    className="flex-1 bg-[#0B1C2D]/10 hover:bg-[#C6A75E]/50 transition-all duration-300"
+                                    style={{ height: `${h}%` }}
+                                />
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Activity */}
+                    <div className="bg-white border border-[#0B1C2D]/10 p-6">
+                        <p className="text-xs tracking-widest uppercase text-[#C6A75E] mb-4">
+                            Activité récente
+                        </p>
+
+                        <div className="space-y-4 text-sm">
+                            {orders.slice(0, 4).map((order) => (
+                                <div key={order.id} className="flex justify-between">
+                    <span className="text-[#0B1C2D] font-light">
+                        {order.email}
+                    </span>
+                                    <span className="text-[#0B1C2D]/50">
+                        {order.total} DA
+                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
                 {/* Quick Links */}
                 <div className="bg-white border border-[#0B1C2D]/10 p-8">
                     <p className="text-xs tracking-widest uppercase text-[#C6A75E] mb-6">

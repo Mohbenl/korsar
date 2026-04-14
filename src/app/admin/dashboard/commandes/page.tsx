@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAdmin } from "@/contexts/AdminContext";
 import { DM_Sans } from "next/font/google";
 import Link from "next/link";
-import { LogOut, ShoppingCart, ArrowLeft, Plus, Trash2, X, CheckCircle, Truck, Clock } from "lucide-react";
+import {LogOut, ShoppingCart, ArrowLeft, Plus, Trash2, X, CheckCircle, Truck, Clock, Search} from "lucide-react";
 
 const dmSans = DM_Sans({
     subsets: ["latin"],
@@ -15,6 +15,13 @@ const dmSans = DM_Sans({
 
 type OrderStatus = "pending" | "completed" | "shipped";
 
+interface OrderItem {
+    name: string;
+    size: string;
+    quantity: number;
+    price: number;
+}
+
 interface Order {
     id: string;
     nom: string;
@@ -23,6 +30,9 @@ interface Order {
     total: number;
     date: string;
     status: OrderStatus;
+
+    // 👇 AJOUT ICI
+    orderItems?: OrderItem[];
 }
 
 const AdminCommandesPage = () => {
@@ -31,6 +41,12 @@ const AdminCommandesPage = () => {
     const [orders, setOrders] = useState<Order[]>([]);
     const [showAddOrder, setShowAddOrder] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
+    const [statusFilter, setStatusFilter] = useState("Tous");
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const ordersPerPage = 6;
     const [formData, setFormData] = useState<{
         nom: string;
         prenom: string;
@@ -56,6 +72,12 @@ const AdminCommandesPage = () => {
         loadOrders();
     }, []);
 
+    useEffect(() => {
+        const t = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+        }, 300);
+        return () => clearTimeout(t);
+    }, [searchTerm]);
     const loadOrders = () => {
         try {
             const savedOrders = localStorage.getItem("korsar-orders");
@@ -237,6 +259,22 @@ const AdminCommandesPage = () => {
         return null;
     }
 
+    const filteredOrders = orders.filter((o) => {
+        const matchSearch =
+            o.nom.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+            o.prenom.toLowerCase().includes(debouncedSearch.toLowerCase());
+
+        const matchStatus =
+            statusFilter === "Tous" || o.status === statusFilter;
+
+        return matchSearch && matchStatus;
+    });
+
+    const indexOfLast = currentPage * ordersPerPage;
+    const indexOfFirst = indexOfLast - ordersPerPage;
+    const currentOrders = filteredOrders.slice(indexOfFirst, indexOfLast);
+
+    const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
     return (
         <div className={`${dmSans.className} bg-[#F5F3EE] min-h-screen`}>
             {/* Header */}
@@ -376,6 +414,53 @@ const AdminCommandesPage = () => {
                     </div>
                 )}
 
+                <div className="bg-white border border-[#0B1C2D]/10 p-6 mb-8 space-y-6">
+
+                    {/* SEARCH */}
+                    <div className="relative w-full md:w-1/3">
+                        <Search
+                            size={18}
+                            className="absolute left-4 top-1/2 -translate-y-1/2 text-[#0B1C2D]/40"
+                        />
+                        <input
+                            type="text"
+                            placeholder="Rechercher un produit..."
+                            value={searchTerm}
+                            onChange={(e) => {
+                                setSearchTerm(e.target.value);
+                                setCurrentPage(1);
+                            }}
+                            className="w-full pl-12 pr-4 py-3 border border-[#0B1C2D]/10 focus:border-[#C6A75E] outline-none text-[#0B1C2D] transition-all duration-300"
+                        />
+                    </div>
+
+                    {/* FILTER */}
+                    <div className="flex gap-2">
+                        {["Tous", "pending", "shipped", "completed"].map((s) => (
+                            <button
+                                key={s}
+                                onClick={() => {
+                                    setStatusFilter(s);
+                                    setCurrentPage(1);
+                                }}
+                                className={`px-3 py-2 text-xs tracking-widest uppercase border transition ${
+                                    statusFilter === s
+                                        ? "bg-[#0B1C2D] text-white"
+                                        : "border-[#0B1C2D]/20 text-[#0B1C2D]"
+                                }`}
+                            >
+                                {s === "pending"
+                                    ? "En attente"
+                                    : s === "shipped"
+                                        ? "Expédiée"
+                                        : s === "completed"
+                                            ? "Complétée"
+                                            : "Tous"}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
                 {/* Orders Table */}
                 {orders.length === 0 ? (
                     <div className="bg-white border border-[#0B1C2D]/10 p-12 text-center">
@@ -388,7 +473,7 @@ const AdminCommandesPage = () => {
                     <div className="bg-white border border-[#0B1C2D]/10 overflow-x-auto">
                         <table className="w-full">
                             <thead className="border-b border-[#0B1C2D]/10 bg-[#F5F3EE]">
-                            <tr>
+                            <tr className="border-b border-[#0B1C2D]/10 hover:bg-[#F5F3EE] transition-all duration-300">
                                 <th className="px-6 py-4 text-left text-xs tracking-widest uppercase text-[#C6A75E] font-light">
                                     ID
                                 </th>
@@ -416,7 +501,7 @@ const AdminCommandesPage = () => {
                             </tr>
                             </thead>
                             <tbody>
-                            {orders.map((order, index) => (
+                            {currentOrders.map((order, index) => (
                                 <tr
                                     key={order.id}
                                     className={`border-b border-[#0B1C2D]/10 hover:bg-[#F5F3EE] transition-all duration-300 ${
@@ -469,12 +554,28 @@ const AdminCommandesPage = () => {
                         </table>
                     </div>
                 )}
+
+                <div className="flex justify-center gap-2 mt-6">
+                    {Array.from({ length: totalPages }, (_, i) => (
+                        <button
+                            key={i}
+                            onClick={() => setCurrentPage(i + 1)}
+                            className={`px-3 py-2 text-xs border ${
+                                currentPage === i + 1
+                                    ? "bg-[#0B1C2D] text-white"
+                                    : "border-[#0B1C2D]/20 text-[#0B1C2D]"
+                            }`}
+                        >
+                            {i + 1}
+                        </button>
+                    ))}
+                </div>
             </main>
 
             {/* Modal Détails Commande */}
             {selectedOrder && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50">
-                    <div className="bg-white rounded-lg max-w-md w-full p-8 animate-in fade-in">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-6 z-50">
+                    <div className="bg-white rounded-lg max-w-2xl w-full p-8 animate-in fade-in max-h-[85vh] flex flex-col">
                         {/* Header */}
                         <div className="flex items-center justify-between mb-6">
                             <h2 className="text-2xl font-light text-[#0B1C2D]">
@@ -489,7 +590,7 @@ const AdminCommandesPage = () => {
                         </div>
 
                         {/* Details */}
-                        <div className="space-y-6">
+                        <div className="space-y-6 overflow-y-auto pr-2">
                             {/* ID */}
                             <div>
                                 <p className="text-xs tracking-widest uppercase text-[#C6A75E] mb-2">
@@ -503,7 +604,7 @@ const AdminCommandesPage = () => {
                             {/* Email */}
                             <div>
                                 <p className="text-xs tracking-widest uppercase text-[#C6A75E] mb-2">
-                                    Email client
+                                    Information du client
                                 </p>
                                 <p className="text-[#0B1C2D] font-light break-all">
                                     {selectedOrder.nom}
@@ -523,6 +624,35 @@ const AdminCommandesPage = () => {
                                 </p>
                             </div>
 
+                            {/* ARTICLES DÉTAILLÉS */}
+                            {selectedOrder.orderItems && (
+                                <div>
+                                    <p className="text-xs tracking-widest uppercase text-[#C6A75E] mb-2">
+                                        Articles
+                                    </p>
+
+                                    <div className="space-y-2">
+                                        {selectedOrder.orderItems.map((item: OrderItem, i: number) => (
+                                            <div
+                                                key={i}
+                                                className="flex justify-between border border-[#0B1C2D]/10 p-2"
+                                            >
+                                                <div>
+                                                    <p className="text-[#0B1C2D] font-light">
+                                                        {item.name}
+                                                    </p>
+                                                    <p className="text-xs text-[#0B1C2D]/50">
+                                                        {item.size} • x{item.quantity}
+                                                    </p>
+                                                </div>
+                                                <p className="text-[#0B1C2D] font-light">
+                                                    {(item.price * item.quantity).toLocaleString()} DA
+                                                </p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                             {/* Total */}
                             <div>
                                 <p className="text-xs tracking-widest uppercase text-[#C6A75E] mb-2">
@@ -589,7 +719,7 @@ const AdminCommandesPage = () => {
                         {/* Close Button */}
                         <button
                             onClick={() => setSelectedOrder(null)}
-                            className="w-full mt-8 py-3 cursor-pointer bg-[#0B1C2D] text-white hover:bg-[#C6A75E] transition-all duration-300 text-sm tracking-widest uppercase"
+                            className="w-full mt-6 py-3 cursor-pointer bg-[#0B1C2D] text-white hover:bg-[#C6A75E] transition-all duration-300 text-sm tracking-widest uppercase"
                         >
                             Fermer
                         </button>
