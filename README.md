@@ -9,7 +9,7 @@ Le projet inclut un site vitrine + un système de gestion admin pour gérer les 
 
 ## 🚀 Tech Stack
 
-- ⚡ Next.js (pour l’admin dashboard)
+- ⚡ Next.js
 - 🎨 Tailwind CSS
 - 📊 Recharts (analytics dashboard)
 - 🧠 LocalStorage (simulation backend)
