@@ -104,12 +104,20 @@ export default function Footer() {
             {/* Bottom bar */}
             <div className="border-t border-white/10">
                 <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+
                     <p className="text-gray-500 text-xs">
-                        © {new Date().getFullYear()} Corso Tech. Tous droits réservés.
+                        © {new Date().getFullYear()} Korsar. Tous droits réservés.
                     </p>
-                    <p className="text-gray-600 text-xs">
-                        Made in Algeria 🇩🇿
-                    </p>
+
+                    <div className="flex items-center gap-4 text-xs">
+                        <Link href="https://korso-tech.vercel.app/">
+                            <p className="text-gray-600">
+                                Site développé par <span className="text-[#C6A75E]">Korso Tech</span>
+                            </p>
+                        </Link>
+
+                    </div>
+
                 </div>
             </div>
         </footer>
