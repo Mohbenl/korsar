@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useLayoutEffect } from "react";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { ShoppingBag, User, Menu, X } from "lucide-react";
 import { DM_Sans } from "next/font/google";
@@ -22,7 +22,7 @@ export default function Navbar() {
     const { getCartItemCount } = useCart();
     const cartCount = getCartItemCount();
 
-    useLayoutEffect(() => {
+    useEffect(() => {
         if (!isHomePage) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setScrolled(true);
@@ -117,7 +117,7 @@ export default function Navbar() {
                         {/* Panier mobile */}
                         <Link
                             href="/panier"
-                            className={`relative ${scrolled ? "text-black" : "text-white"} hover:text-[#C6A75E] transition`}
+                            className={`relative ${menuOpen ? "text-black" : scrolled ? "text-black" : "text-white"} hover:text-[#C6A75E] transition`}
                         >
                             <ShoppingBag size={22} />
                             {cartCount > 0 && (
@@ -128,7 +128,13 @@ export default function Navbar() {
                         </Link>
                         <button
                             onClick={() => setMenuOpen(!menuOpen)}
-                            className={scrolled ? "text-black" : "text-white"}
+                            className={
+                                menuOpen
+                                    ? "text-black"
+                                    : scrolled
+                                        ? "text-black"
+                                        : "text-white"
+                            }
                         >
                             {menuOpen ? <X size={30} /> : <Menu size={30} />}
                         </button>

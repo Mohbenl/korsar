@@ -25,9 +25,13 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="fr" className="h-full">
+        <html
+            lang="fr"
+            className="h-full"
+            suppressHydrationWarning
+        >
         <body
-            className={`${geistSans.variable} ${geistMono.variable} antialiased overflow-x-hidden min-h-full`}
+            className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-full overflow-x-hidden`}
         >
         <AdminProvider>
             <CartProvider>

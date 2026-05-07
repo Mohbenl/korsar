@@ -1,34 +1,51 @@
 @import "tailwindcss";
 
+/* =========================
+   RESET & GLOBAL FIX
+========================= */
 
-html, body {
+html,
+body {
   width: 100%;
-  height: 100%;
-  overflow-x: hidden; /* 🔥 FIX PRINCIPAL */
+  min-height: 100%;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
 }
 
 * {
   box-sizing: border-box;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans);
-}
-
-
+/* =========================
+   ROOT VARIABLES
+========================= */
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  --font-geist-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
-  "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
-  "Helvetica Neue", sans-serif;
-  --font-geist-mono: "Courier New", monospace;
+
+  --font-geist-sans:
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          "Roboto",
+          "Oxygen",
+          "Ubuntu",
+          "Cantarell",
+          "Fira Sans",
+          "Droid Sans",
+          "Helvetica Neue",
+          sans-serif;
+
+  --font-geist-mono:
+          "Courier New",
+          monospace;
 }
 
-/* Dark mode */
+/* =========================
+   DARK MODE
+========================= */
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
@@ -36,25 +53,39 @@ body {
   }
 }
 
+/* =========================
+   BODY
+========================= */
 
-
-section {
-  max-width: 100%;
-  overflow-x: clip; /* 🔥 empêche débordement horizontal */
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans);
 }
 
-img, svg, video {
+/* =========================
+   MEDIA SAFETY
+========================= */
+
+img,
+svg,
+video,
+canvas {
   max-width: 100%;
   height: auto;
+  display: block;
 }
 
+/* =========================
+   FADE UP
+========================= */
 
-/* Fade Up */
 @keyframes fadeUp {
   0% {
     opacity: 0;
     transform: translateY(30px);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0);
@@ -77,18 +108,25 @@ img, svg, video {
   animation-delay: 0.5s;
 }
 
-/* Fade In */
+/* =========================
+   FADE IN
+========================= */
+
 @keyframes fadeIn {
   to {
     opacity: 1;
   }
 }
 
-/* Zoom */
+/* =========================
+   ZOOM
+========================= */
+
 @keyframes zoom {
   from {
     transform: scale(1);
   }
+
   to {
     transform: scale(1.1);
   }
@@ -98,11 +136,15 @@ img, svg, video {
   animation: zoom 10s ease-in-out infinite alternate;
 }
 
-/* Scroll indicator */
+/* =========================
+   SCROLL INDICATOR
+========================= */
+
 @keyframes scroll {
   0% {
     transform: translateY(-100%);
   }
+
   100% {
     transform: translateY(200%);
   }
