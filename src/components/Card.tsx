@@ -1,20 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import {Product} from "@/lib/product";
 import Image from "next/image";
 import Link from "next/link";
 import { ShoppingCart, Star } from "lucide-react";
 
-interface Product {
-    id: string;
-    name: string;
-    price: number;
-    image: string;
-    category: string;
-    rating: number;
-    reviews: number;
-    sizes: string[];
-}
 
 interface ProductCardProps {
     product: Product;
@@ -33,7 +24,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                 {/* Image */}
                 <div className="relative aspect-[4/5] overflow-hidden bg-gray-50 p-4 flex items-center justify-center">
                     <Image
-                        src={product.image}
+                        src={product.image || "/placeholder.png"}
                         alt={product.name}
                         fill
                         className="object-contain transition-transform duration-500 group-hover:scale-110"
@@ -41,7 +32,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
                     {/* Badge catégorie */}
                     <span className="absolute top-4 left-4 bg-[#0B1C2D] text-white text-xs px-3 py-1 rounded-full">
-                        {product.category}
+                        {product.categorie}
                     </span>
 
                     {/* Bouton quick add */}
@@ -65,7 +56,6 @@ export default function ProductCard({ product }: ProductCardProps) {
                     <div className="flex items-center gap-1 mb-2">
                         <Star className="h-4 w-4 fill-[#C6A75E] text-[#C6A75E]" />
                         <span className="text-sm font-medium text-gray-500">{product.rating}</span>
-                        <span className="text-xs text-gray-400 ml-1">({product.reviews})</span>
                     </div>
                     <h3 className="text-lg font-semibold text-[#0B1C2D] mb-2 group-hover:text-[#C6A75E] transition-colors line-clamp-1">
                         {product.name}

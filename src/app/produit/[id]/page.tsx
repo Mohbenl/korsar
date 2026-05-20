@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState,useEffect } from "react";
+import { useParams } from "next/navigation";
+import { getProductById, Product,getProducts } from "@/lib/product";
 import Image from "next/image";
 import Link from "next/link";
 import { DM_Sans } from "next/font/google";
@@ -8,7 +10,6 @@ import { ShoppingBag, ArrowLeft, Star, Truck, RefreshCw, Shield } from "lucide-r
 import ProductCard from "@/components/Card";
 import Footer from "@/components/footer";
 import { useCart } from "@/contexts/CartContext";
-import {router} from "next/client";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 
@@ -18,64 +19,8 @@ const dmSans = DM_Sans({
     display: "swap",
 });
 
-// Données statiques — à remplacer par un fetch plus tard
-const product = {
-    id: "1",
-    name: "Technical Jacket",
-    price: 12900,
-    category: "Vestes",
-    rating: 4.8,
-    reviews: 124,
-    description:
-        "Une veste technique pensée pour affronter les éléments sans sacrifier le style. Conçue avec des matières premium résistantes à l'eau et respirantes, elle incarne l'ADN Korsar — utilitaire, raffinée, exclusive.",
-    details: [
-        "Tissu technique résistant à l'eau (DWR)",
-        "Construction 3 couches respirante",
-        "Poches zippées étanches",
-        "Coupe ajustée urban fit",
-        "Logo Korsar brodé",
-        "Édition limitée — pas de restock",
-    ],
-    sizes: ["XS", "S", "M", "L", "XL", "XXL"],
-    images: [
-        "/image/Technical Jacket.png",
-        "/image/Technical Jacket.png",
-        "/image/Technical Jacket.png",
-    ],
-};
 
-const similarProducts = [
-    {
-        id: "2",
-        name: "Maritime Overshirt",
-        price: 8900,
-        image: "/image/Lightweight Overshirt.png",
-        category: "Overshirts",
-        rating: 4.6,
-        reviews: 89,
-        sizes: ["S", "M", "L"],
-    },
-    {
-        id: "3",
-        name: "Korsar Sweat",
-        price: 6900,
-        image: "/image/sweat shirt face.png",
-        category: "Sweats",
-        rating: 4.7,
-        reviews: 102,
-        sizes: ["S", "M", "L", "XL"],
-    },
-    {
-        id: "4",
-        name: "Cargo Pants",
-        price: 7900,
-        image: "/image/Slim Cargo Pants.png",
-        category: "Pantalons",
-        rating: 4.5,
-        reviews: 67,
-        sizes: ["S", "M", "L", "XL"],
-    },
-];
+
 
 const guarantees = [
     { icon: Truck, label: "Livraison 48h", desc: "Partout en Algérie" },
@@ -83,24 +28,93 @@ const guarantees = [
     { icon: Shield, label: "Paiement sécurisé", desc: "100% sécurisé" },
 ];
 export default function ProductDetailPage() {
+
+    const params = useParams();
+    const id = params.id as string;
+
+    const [product, setProduct] = useState<Product | null>(null);
+    const [similarProducts, setSimilarProducts] = useState<Product[]>([]);
     const [selectedSize, setSelectedSize] = useState<string | null>(null);
     const [activeImage, setActiveImage] = useState(0);
     const [quantity, setQuantity] = useState(1);
     const [added, setAdded] = useState(false);
+
     const { addToCart } = useCart();
     const router = useRouter();
 
+
+    useEffect(() => {
+        async function fetchProduct() {
+            try {
+                const data = await getProductById(id);
+
+                setProduct({
+                    ...data,
+                    details: data.details || [
+                        "Produit premium",
+                        "Édition limitée",
+                        "Qualité Korsar",
+                    ],
+                });
+
+                const allProducts = await getProducts();
+
+                const filteredProducts = allProducts
+                    .filter((p) => p.id !== data.id)
+                    .slice(0, 3);
+
+                setSimilarProducts(filteredProducts);
+            } catch (error) {
+                console.log(error);
+            }
+        }
+
+        if (id) {
+            fetchProduct();
+        }
+    }, [id]);
+
+
     const handleAddToCart = () => {
-        if (!selectedSize) return;
-        addToCart(product, selectedSize, quantity);
+        if (!product) return;
+
+        addToCart(
+            {
+                ...product,
+                categorie: product.categorie,
+            },
+            selectedSize || undefined,
+            quantity
+        );
         setAdded(true);
         setTimeout(() => setAdded(false), 2000);
     };
 
     const handleOrder = () => {
-        if (!selectedSize) return;
+        if (!selectedSize || !product) return;
+
         router.push(`/commander?id=${product.id}&size=${selectedSize}&quantity=${quantity}`);
     };
+
+    if (!product) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                Chargement...
+            </div>
+        );
+    }
+
+    const productImages = Array.isArray(product.image)
+        ? product.image
+        : product.image
+            ? [product.image]
+            : ["/image/placeholder.png"];
+
+    const productSizes = Array.isArray(product.sizes)
+        ? product.sizes
+        : [];
+
+
     return (
         <div className={`${dmSans.className} bg-[#F5F3EE] min-h-screen`}>
             <Navbar />
@@ -123,7 +137,7 @@ export default function ProductDetailPage() {
 
                     {/* Thumbnails */}
                     <div className="flex flex-col gap-3">
-                        {product.images.map((img, index) => (
+                        {productImages.map((img: string, index: number) => (
                             <button
                                 key={index}
                                 onClick={() => setActiveImage(index)}
@@ -146,7 +160,7 @@ export default function ProductDetailPage() {
                     {/* Main image */}
                     <div className="relative flex-1 aspect-[2/3] overflow-hidden bg-white">
                         <Image
-                            src={product.images[activeImage]}
+                            src={productImages[activeImage]}
                             alt={product.name}
                             fill
                             className="object-contain"
@@ -164,7 +178,7 @@ export default function ProductDetailPage() {
                     {/* Header */}
                     <div>
                         <p className="text-[#C6A75E] text-xs tracking-widest uppercase mb-2">
-                            {product.category}
+                            {product.categorie}
                         </p>
                         <h1 className="text-[#0B1C2D] text-4xl font-light mb-4">
                             {product.name}
@@ -182,7 +196,7 @@ export default function ProductDetailPage() {
                                 ))}
                             </div>
                             <span className="text-sm text-gray-400">
-                                {product.rating} ({product.reviews} avis)
+                                {product.rating}
                             </span>
                         </div>
                     </div>
@@ -194,7 +208,7 @@ export default function ProductDetailPage() {
 
                     {/* Description */}
                     <p className="text-gray-500 font-light leading-relaxed">
-                        {product.description}
+                        {product.description || "Produit exclusif Korsar."}
                     </p>
 
                     {/* Size selector */}
@@ -208,7 +222,7 @@ export default function ProductDetailPage() {
                             )}
                         </div>
                         <div className="flex gap-2 flex-wrap">
-                            {product.sizes.map((size) => (
+                            {productSizes.map((size: string) => (
                                 <button
                                     key={size}
                                     onClick={() => setSelectedSize(size)}
@@ -281,7 +295,7 @@ export default function ProductDetailPage() {
                             Détails du produit
                         </p>
                         <ul className="flex flex-col gap-2">
-                            {product.details.map((detail, i) => (
+                            {(product.details || []).map((detail, i) => (
                                 <li key={i} className="flex items-center gap-2 text-gray-500 text-sm font-light">
                                     <span className="w-1 h-1 bg-[#C6A75E] rounded-full shrink-0" />
                                     {detail}

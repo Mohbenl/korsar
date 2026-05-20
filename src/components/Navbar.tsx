@@ -47,7 +47,7 @@ export default function Navbar() {
         { label: "Produit", href: "/produit" },
         { label: "À propos", href: "/a-propos" },
         { label: "Contact", href: "/contact" },
-        { label: "Administration", href: "/admin" },
+        { label: "Administration", href: "/admin/login" },
     ];
 
     return (
@@ -107,7 +107,7 @@ export default function Navbar() {
                                 </span>
                             )}
                         </Link>
-                        <Link href="/admin">
+                        <Link href="/admin/login">
                             <User className="cursor-pointer hover:text-[#C6A75E] transition" size={22}/>
                         </Link>
                     </div>

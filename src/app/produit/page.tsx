@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import {useEffect, useState} from "react";
+import { getProducts, Product } from "@/lib/product";
 import { DM_Sans } from "next/font/google";
 import ProductCard from "@/components/Card";
 import Navbar from "@/components/Navbar";
@@ -13,75 +14,57 @@ const dmSans = DM_Sans({
 
 const categories = ["Tout", "Vestes", "Overshirts", "Sweats", "Pantalons", "T-Shirts", "Accessoires"];
 
-const products = [
-    {
-        id: "1",
-        name: "Technical Jacket",
-        price: 12900,
-        image: "/image/Technical Jacket.png",
-        category: "Vestes",
-        rating: 4.8,
-        reviews: 124,
-        sizes: ["S", "M", "L", "XL"],
-    },
-    {
-        id: "2",
-        name: "Maritime Overshirt",
-        price: 8900,
-        image: "/image/Lightweight Overshirt.png",
-        category: "Overshirts",
-        rating: 4.6,
-        reviews: 89,
-        sizes: ["S", "M", "L"],
-    },
-    {
-        id: "3",
-        name: "Korsar Sweat",
-        price: 6900,
-        image: "/image/sweat shirt face.png",
-        category: "Sweats",
-        rating: 4.7,
-        reviews: 102,
-        sizes: ["S", "M", "L", "XL"],
-    },
-    {
-        id: "4",
-        name: "Cargo Pants",
-        price: 7900,
-        image: "/image/Slim Cargo Pants.png",
-        category: "Pantalons",
-        rating: 4.5,
-        reviews: 67,
-        sizes: ["S", "M", "L", "XL"],
-    },
-    {
-        id: "5",
-        name: "Essential T-Shirt",
-        price: 3900,
-        image: "/image/Structured T-shirt.png",
-        category: "T-Shirts",
-        rating: 4.9,
-        reviews: 210,
-        sizes: ["S", "M", "L", "XL", "XXL"],
-    },
-    {
-        id: "6",
-        name: "Korsar Cap",
-        price: 2900,
-        image: "/image/Technical Cap.png",
-        category: "Accessoires",
-        rating: 4.8,
-        reviews: 156,
-        sizes: ["One Size"],
-    },
-];
+
 
 export default function ProduitPage() {
     const [activeCategory, setActiveCategory] = useState("Tout");
 
+    const [products, setProducts] = useState<Product[]>([]);
+
+    useEffect(() => {
+        const fetchProducts = async () => {
+            const data = await getProducts();
+
+            const normalized: Product[] = (data || []).map((p) => {
+                let sizes: string[] = [];
+
+                if (Array.isArray(p.sizes)) {
+                    sizes = p.sizes;
+                } else if (typeof p.sizes === "string") {
+                    try {
+                        const parsed = JSON.parse(p.sizes);
+
+                        sizes = Array.isArray(parsed)
+                            ? parsed
+                            : p.sizes.split(",");
+                    } catch {
+                        sizes = p.sizes.split(",");
+                    }
+                }
+
+                return {
+                    id: p.id,
+                    name: p.name,
+                    price: p.price ?? 0,
+                    image: p.image || p.image_url || "",
+                    category: p.categorie ?? "",
+                    categorie: p.categorie ?? "",
+                    rating: p.rating ?? 0,
+                    reviews: p.reviews ?? 0,
+                    sizes,
+                    quantity: p.quantity ?? 0,
+                };
+            });
+
+            setProducts(normalized);
+        };
+
+        fetchProducts();
+    }, []);
+
     const filtered = activeCategory === "Tout"
         ? products
-        : products.filter((p) => p.category === activeCategory);
+        : products.filter((p) => p.categorie === activeCategory);
 
     return (
         <div className={`${dmSans.className} bg-[#F5F3EE] min-h-screen`}>

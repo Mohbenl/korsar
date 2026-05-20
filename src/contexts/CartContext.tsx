@@ -1,29 +1,16 @@
 "use client";
 
 import React, { createContext, useContext, useState, useRef, useEffect } from "react";
+import { Product} from "@/lib/product";
 
-interface Product {
-    id: string;
-    name: string;
-    price: number;
-    image?: string;
-    images?: string[];
-    category: string;
-    rating: number;
-    reviews: number;
-    sizes: string[];
-    description?: string;
-    details?: string[];
-}
 
 interface CartItem {
     id: string;
     name: string;
     price: number;
-    image?: string;
+    image?: string | null;
     category: string;
     rating: number;
-    reviews: number;
     size: string;
     quantity: number;
 }
@@ -91,13 +78,14 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
             }
 
             const newItem: CartItem = {
-                id: product.id,
+                id: product.id || crypto.randomUUID(),
                 name: product.name,
                 price: product.price,
-                image: product.image,
-                category: product.category,
+                image: Array.isArray(product.image)
+                    ? product.image[0]
+                    : product.image || null,
+                category: product.categorie,
                 rating: product.rating,
-                reviews: product.reviews,
                 size,
                 quantity,
             };

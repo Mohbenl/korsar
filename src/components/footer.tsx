@@ -16,7 +16,7 @@ const links = {
         { label: "Produit", href: "/produit" },
         { label: "À propos", href: "/a-propos" },
         { label: "Contact", href: "/contact" },
-        { label: "Administration", href: "/admin" },
+        { label: "Administration", href: "/admin/login" },
     ],
     legal: [
         { label: "Mentions légales", href: "/mentions-legales" },
