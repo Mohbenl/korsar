@@ -1,11 +1,13 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useState, Suspense } from "react";
+import {useState, Suspense, useEffect} from "react";
 import { DM_Sans } from "next/font/google";
 import { useRouter } from "next/navigation";
 import Footer from "@/components/footer";
 import Navbar from "@/components/Navbar";
+import { getProductById,Product } from "@/lib/product";
+import { createOrder, Order, OrderItem } from "@/lib/commande";
 
 const dmSans = DM_Sans({
     subsets: ["latin"],
@@ -24,68 +26,7 @@ const wilayas = [
     "Ghardaïa", "Relizane",
 ];
 
-const products = [
-    {
-        id: "1",
-        name: "Technical Jacket",
-        price: 12900,
-        image: "/image/Technical Jacket.png",
-        category: "Vestes",
-        rating: 4.8,
-        reviews: 124,
-        sizes: ["S", "M", "L", "XL"],
-    },
-    {
-        id: "2",
-        name: "Maritime Overshirt",
-        price: 8900,
-        image: "/image/Lightweight Overshirt.png",
-        category: "Overshirts",
-        rating: 4.6,
-        reviews: 89,
-        sizes: ["S", "M", "L"],
-    },
-    {
-        id: "3",
-        name: "Korsar Sweat",
-        price: 6900,
-        image: "/image/sweat shirt face.png",
-        category: "Sweats",
-        rating: 4.7,
-        reviews: 102,
-        sizes: ["S", "M", "L", "XL"],
-    },
-    {
-        id: "4",
-        name: "Cargo Pants",
-        price: 7900,
-        image: "/image/Slim Cargo Pants.png",
-        category: "Pantalons",
-        rating: 4.5,
-        reviews: 67,
-        sizes: ["S", "M", "L", "XL"],
-    },
-    {
-        id: "5",
-        name: "Essential T-Shirt",
-        price: 3900,
-        image: "/image/Structured T-shirt.png",
-        category: "T-Shirts",
-        rating: 4.9,
-        reviews: 210,
-        sizes: ["S", "M", "L", "XL", "XXL"],
-    },
-    {
-        id: "6",
-        name: "Korsar Cap",
-        price: 2900,
-        image: "/image/Technical Cap.png",
-        category: "Accessoires",
-        rating: 4.8,
-        reviews: 156,
-        sizes: ["One Size"],
-    },
-];
+
 
 function CommanderContent() {
     const searchParams = useSearchParams();
@@ -95,9 +36,33 @@ function CommanderContent() {
     const size = searchParams.get("size");
     const quantity = parseInt(searchParams.get("quantity") || "1");
 
-    const product = products.find((p) => p.id === productId);
+    const [product, setProduct] = useState<Product | null>(null);
+    const [loading, setLoading] = useState(true);
+
     const total = product ? product.price * quantity : 0;
 
+
+    useEffect(() => {
+        async function loadProduct() {
+            if (!productId) {
+                setLoading(false);
+                return;
+            }
+
+            try {
+                const data = await getProductById(productId);
+                setProduct(data);
+            } catch (err) {
+                console.log(err);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        loadProduct();
+    }, [productId]);
+
+    const [submitted, setSubmitted] = useState(false);
     const [form, setForm] = useState({
         nom: "",
         prenom: "",
@@ -106,12 +71,50 @@ function CommanderContent() {
         wilaya: "",
     });
 
-    const [submitted, setSubmitted] = useState(false);
 
-    const handleSubmit = (e: React.FormEvent) => {
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setSubmitted(true);
+
+        if (!product) return;
+
+        try {
+            const order: Order = {
+                nom: form.nom,
+                prenom: form.prenom,
+                telephone: form.telephone,
+                adresse: form.adresse,
+                wilaya: form.wilaya,
+                total,
+                statut: "En Attente",
+            };
+
+            const items: OrderItem[] = [
+                {
+                    product_id: product.id!,
+                    quantite: quantity,
+                    taille: size || "",
+                    prix: product.price,
+                },
+            ];
+
+            await createOrder(order, items);
+
+            setSubmitted(true);
+        } catch (err) {
+            console.error("Erreur création commande:", err);
+        }
     };
+
+    if (loading) {
+        return (
+            <div className="max-w-7xl mx-auto px-6 py-32 text-center">
+                <p className="text-gray-400 text-lg font-light">
+                    Chargement...
+                </p>
+            </div>
+        );
+    }
 
     if (!product) {
         return (
@@ -122,6 +125,12 @@ function CommanderContent() {
             </div>
         );
     }
+
+    const productImages: string[] = Array.isArray(product?.image)
+        ? product.image
+        : product?.image
+            ? [product.image]
+            : [];
 
     return (
         <>
@@ -137,14 +146,14 @@ function CommanderContent() {
                         <div className="flex gap-4">
                             <div className="w-20 h-24 bg-gray-50 relative shrink-0">
                                 <img
-                                    src={product.image}
+                                    src={productImages[0]}
                                     alt={product.name}
                                     className="w-full h-full object-contain"
                                 />
                             </div>
                             <div className="flex flex-col gap-1">
                                 <p className="text-[#C6A75E] text-xs tracking-widest uppercase">
-                                    {product.category}
+                                    {product.categorie}
                                 </p>
                                 <p className="text-[#0B1C2D] text-lg font-light">
                                     {product.name}
