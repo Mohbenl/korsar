@@ -33,10 +33,7 @@ export default function ProduitPage() {
                 } else if (typeof p.sizes === "string") {
                     try {
                         const parsed = JSON.parse(p.sizes);
-
-                        sizes = Array.isArray(parsed)
-                            ? parsed
-                            : p.sizes.split(",");
+                        sizes = Array.isArray(parsed) ? parsed : p.sizes.split(",");
                     } catch {
                         sizes = p.sizes.split(",");
                     }
@@ -46,11 +43,10 @@ export default function ProduitPage() {
                     id: p.id,
                     name: p.name,
                     price: p.price ?? 0,
-                    image: p.image || p.image_url || "",
+                    image: p.image || p.image || "",
                     category: p.categorie ?? "",
                     categorie: p.categorie ?? "",
                     rating: p.rating ?? 0,
-                    reviews: p.reviews ?? 0,
                     sizes,
                     quantity: p.quantity ?? 0,
                 };

@@ -124,7 +124,6 @@ export default function OrderDetailsModal({
                     >
                         <X />
                     </button>
-
                     <h2 className="text-lg sm:text-xl font-light text-[#0B1C2D]">
                         Détails de la commande
                     </h2>
